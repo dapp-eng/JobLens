@@ -211,6 +211,14 @@
     renderKpis(merged.kpis, 'kpiRow');
     renderBanner(merged.kpis, true);
     updateSidebarMeta(merged);
+    const hasGap = (merged.gap_analysis || []).length > 0;
+    if (hasGap) {
+      if (el('gap-no-data')) el('gap-no-data').style.display = 'none';
+      if (el('gap-content')) el('gap-content').style.display = 'block';
+      chartGapScatter(merged);
+      chartGapBar(merged);
+    }
+    renderRecommendations(merged);
     const badge = el('topbarScanBadge');
     const resetBtn = el('btnResetScan');
     if (badge) badge.style.display = 'inline-flex';
