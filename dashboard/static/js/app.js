@@ -1,18 +1,15 @@
 (function () {
   "use strict";
-
   const COLORS = {
     blue: "#0A66C2", cyan: "#06B6D4", purple: "#7C3AED", teal: "#0D9488",
     green: "#10B981", amber: "#F59E0B", red: "#EF4444", indigo: "#4F46E5",
     pink: "#EC4899", slate: "#445069",
   };
-
   const PALETTE = [
     "#0A66C2", "#06B6D4", "#7C3AED", "#0D9488", "#10B981",
     "#F59E0B", "#EF4444", "#4F46E5", "#EC4899", "#445069",
     "#2563EB", "#059669", "#D97706", "#DC2626", "#9333EA",
   ];
-
   let _theme = "light";
   let _data = null;
   let _scanResult = null;
@@ -28,10 +25,8 @@
   let _mySkills = [];
   let _remoteFilter = "all";
   let _salaryData = null;
-
   const LS_SCAN_KEY = "kos_scan_v2";
   const LS_SKILLS_KEY = "kos_myskills_v1";
-
   const TYPING_PHRASES = [
     "Menganalisis pasar kerja Indonesia secara real-time...",
     "Tracking the most in-demand skills on LinkedIn...",
@@ -40,7 +35,6 @@
     "Mengidentifikasi peluang konten yang belum terlayani...",
     "Powered by LinkedIn Scraping + Instagram Analytics.",
   ];
-
   function plotLayout(overrides) {
     const dark = _theme === "dark";
     const gridColor = dark ? "rgba(255,255,255,0.07)" : "rgba(0,0,0,0.06)";
@@ -73,9 +67,7 @@
       },
     }, overrides || {});
   }
-
   const PLOTLY_CONFIG = { displaylogo: false, responsive: true, displayModeBar: false };
-
   function fmt(n) {
     if (n === null || n === undefined || n === "") return "-";
     if (typeof n === "number") {
@@ -85,26 +77,21 @@
     }
     return String(n);
   }
-
   function fmtNum(n, d) {
     if (n === null || n === undefined) return "-";
     return Number(n).toFixed(d !== undefined ? d : 2);
   }
-
   function safePct(val) {
     const v = parseFloat(val);
     if (isNaN(v)) return "-";
     if (v > 1) return v.toFixed(2) + "%";
     return (v * 100).toFixed(2) + "%";
   }
-
   function truncate(str, max) {
     if (!str) return "";
     return str.length > max ? str.slice(0, max) + "..." : str;
   }
-
   function el(id) { return document.getElementById(id); }
-
   function renderChart(id, traces, layout, config) {
     const e = el(id);
     if (!e) return;
@@ -115,7 +102,6 @@
       if (e && e.offsetParent !== null) Plotly.relayout(e, { autosize: true });
     }, 80);
   }
-
   function animateCounter(element, finalVal, duration) {
     if (!element) return;
     element.classList.add("animating");
@@ -137,12 +123,10 @@
     };
     requestAnimationFrame(step);
   }
-
   function initTheme() {
     const saved = localStorage.getItem("kos_theme") || "light";
     applyTheme(saved, false);
   }
-
   function applyTheme(theme, rerender) {
     _theme = theme;
     document.documentElement.setAttribute("data-theme", theme);
@@ -152,7 +136,6 @@
       if (d) renderAllCharts(d);
     }
   }
-
   function buildMerged(result) {
     if (!_data) return result;
     const mergedKpis = Object.assign({}, _data.kpis || {}, result.kpis || {}, {
@@ -180,7 +163,6 @@
       }),
     });
   }
-
   function applyLiveScan(result) {
     const merged = buildMerged(result);
     renderJobCharts(merged);
@@ -192,8 +174,6 @@
     if (badge) badge.style.display = "inline-flex";
     if (resetBtn) resetBtn.style.display = "flex";
   }
-
-
   function chartOverviewRemote(data) {
     const remote = data.remote_stats || {};
     if (remote.remote !== undefined) {
@@ -212,7 +192,6 @@
       });
     }
   }
-
   function chartOverviewFreshness(data) {
     const freshness = data.freshness || {};
     if (Object.values(freshness).some((v) => v > 0)) {
@@ -235,18 +214,15 @@
       });
     }
   }
-
   function chartOverviewSalary(data) {
     const salary = data.salary_by_category || [];
     const salaryStats = data.salary_stats || {};
     const osCard = el("overviewSalaryCard");
     const osMeta = el("overviewSalaryMeta");
     const ca = el("chart-overview-salary");
-    
     if (osCard && salaryStats.count > 0) {
       osCard.style.display = "block";
       if (osMeta) osMeta.innerHTML = `Salary Info: <strong>${salaryStats.count} jobs</strong> (${salaryStats.pct_disclosed}%) | Avg: <strong>${salaryStats.currency || 'USD'} ${(salaryStats.avg/1000000).toFixed(1)}M</strong>`;
-      
       if (salary.length >= 1) {
         const cur = salaryStats.currency || "USD";
         const sorted = [...salary].sort((a, b) => b.avg_salary - a.avg_salary);
@@ -272,7 +248,6 @@
       }
     }
   }
-
   function renderJobCharts(data) {
     chartTrend(data);
     chartCategories(data);
@@ -286,7 +261,6 @@
     chartTrendsLine(data);
     renderWordcloudChart(data.skills || []);
   }
-
   function navigate(section) {
     localStorage.setItem("kos_active_menu", section);
     document.querySelectorAll(".page-section").forEach((s) => s.classList.remove("active"));
@@ -319,7 +293,6 @@
     el("mainScroll").scrollTo({ top: 0, behavior: "smooth" });
     if (window.innerWidth <= 900) el("sidebar").classList.remove("mobile-open");
   }
-
   function updateSidebarMeta(data) {
     const kpis = data.kpis || {};
     const meta = data.metadata || {};
@@ -342,7 +315,6 @@
       ].map((i) => `<div class="status-dot ${st[i.k] ? "" : "missing"}">${i.l}</div>`).join("");
     }
   }
-
   function renderKpis(kpis, containerId) {
     const container = el(containerId);
     if (!container) return;
@@ -365,7 +337,6 @@
       });
     }, 200);
   }
-
   function renderIgKpis(kpis) {
     const container = el("igKpiRow");
     if (!container) return;
@@ -387,7 +358,6 @@
       });
     }, 200);
   }
-
   function renderBanner(kpis, isLive) {
     const tag = el("bannerTag");
     const title = el("bannerTitle");
@@ -407,13 +377,11 @@
       stats.innerHTML = items.map((i) => `<div class="banner-stat"><div class="banner-stat-val">${i.val}</div><div class="banner-stat-label">${i.label}</div></div>`).join("");
     }
   }
-
   function noDataHtml() {
     return `<div style="height:100%;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:8px;color:var(--muted);font-size:12px">
       <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
       <span>No data available</span></div>`;
   }
-
   function chartTrend(data) {
     const trend = data.trend || [];
     const e = el("chart-trend");
@@ -433,7 +401,6 @@
       margin: { t: 16, r: 20, b: 70, l: 55 },
     });
   }
-
   function chartCategories(data) {
     const cats = data.categories || [];
     if (!cats.length) { if (el("chart-categories")) el("chart-categories").innerHTML = noDataHtml(); return; }
@@ -458,7 +425,6 @@
       margin: { t: 16, r: 110, b: 16, l: 16 },
     });
   }
-
   function chartLocations(data) {
     const locs = data.locations || [];
     if (!locs.length) { if (el("chart-locations")) el("chart-locations").innerHTML = noDataHtml(); return; }
@@ -475,7 +441,6 @@
       margin: { t: 16, r: 16, b: 80, l: 50 },
     });
   }
-
   function chartTrendsLine(data) {
     const trend = data.trend || [];
     if (!trend.length) { if (el("chart-trends-line")) el("chart-trends-line").innerHTML = noDataHtml(); return; }
@@ -492,7 +457,6 @@
       margin: { t: 16, r: 16, b: 80, l: 50 },
     });
   }
-
   function chartSkillsBar(data) {
     const skills = data.skills || [];
     if (!skills.length) { if (el("chart-skills-bar")) el("chart-skills-bar").innerHTML = noDataHtml(); return; }
@@ -515,7 +479,6 @@
       bargap: 0.3,
     });
   }
-
   function chartCatSkills(data) {
     const rows = data.category_skills || [];
     if (!rows.length) { if (el("chart-cat-skills")) el("chart-cat-skills").innerHTML = noDataHtml(); return; }
@@ -539,7 +502,6 @@
       margin: { t: 14, r: 65, b: 90, l: 24 },
     });
   }
-
   function chartCompanies(data) {
     const companies = data.companies || [];
     if (!companies.length) { if (el("chart-companies")) el("chart-companies").innerHTML = noDataHtml(); return; }
@@ -562,7 +524,6 @@
       bargap: 0.28,
     });
   }
-
   function chartIgType(ig) {
     const rows = ig.type_performance || [];
     if (!rows.length) return;
@@ -586,7 +547,6 @@
       bargap: 0.4,
     });
   }
-
   function chartIgTopic(ig) {
     const rows = ig.topic_performance || [];
     if (!rows.length) return;
@@ -606,7 +566,6 @@
       bargap: 0.3,
     });
   }
-
   function chartIgDay(ig) {
     const rows = ig.day_pattern || [];
     if (!rows.length) return;
@@ -628,7 +587,6 @@
       bargap: 0.35,
     });
   }
-
   function chartIgMonthly(ig) {
     const rows = ig.monthly_trend || [];
     if (!rows.length) return;
@@ -650,7 +608,6 @@
       margin: { t: 16, r: 16, b: 80, l: 80 },
     });
   }
-
   function chartIgHashtags(ig) {
     const rows = ig.hashtags || [];
     if (!rows.length) return;
@@ -668,7 +625,6 @@
       bargap: 0.3,
     });
   }
-
   function chartGapScatter(data) {
     const rows = data.gap_analysis || [];
     if (!rows.length) return;
@@ -696,7 +652,6 @@
       margin: { t: 20, r: 80, b: 60, l: 60 },
     });
   }
-
   function chartGapBar(data) {
     const rows = data.gap_analysis || [];
     if (!rows.length) return;
@@ -719,7 +674,6 @@
       bargap: 0.3,
     });
   }
-
   function renderWordcloudChart(skills) {
     const card = el("wordcloudCard");
     const container = el("chart-wordcloud");
@@ -757,7 +711,6 @@
       autosize: true,
     }), PLOTLY_CONFIG);
   }
-
   function renderRecommendations(data) {
     const rows = data.recommendations || [];
     const container = el("recs-cards");
@@ -788,7 +741,6 @@
       </div>`;
     }).join("");
   }
-
   function renderAllCharts(data) {
     const kpis = data.kpis || {};
     renderBanner(kpis, !!kpis.is_live_scan);
@@ -824,12 +776,10 @@
     renderRecommendations(data);
     updateSidebarMeta(data);
   }
-
   function setSpinner(visible) {
     const sp = el("scanSpinnerInline");
     if (sp) sp.style.display = visible ? "flex" : "none";
   }
-
   function setProgress(pct, msg) {
     const fill = el("progressFill");
     const pctEl = el("progressPct");
@@ -838,7 +788,6 @@
     if (pctEl) pctEl.textContent = pct + "%";
     if (msgEl) msgEl.textContent = msg || "";
   }
-
   function addLog(msg, type) {
     const log = el("scanLog");
     if (!log) return;
@@ -850,7 +799,6 @@
     log.appendChild(line);
     log.scrollTop = log.scrollHeight;
   }
-
   function renderJobTable(jobs) {
     _jobsAll = jobs || [];
     _jobsFiltered = [..._jobsAll];
@@ -863,7 +811,6 @@
     if (badge) badge.textContent = _jobsAll.length + " jobs";
     drawJobTable();
   }
-
   function drawJobTable() {
     const tbody = el("jobTableBody");
     if (!tbody) return;
@@ -904,7 +851,6 @@
       if (existing) existing.textContent = `Menampilkan ${start + 1} - ${Math.min(start + pageSize, total)} dari ${total} jobs`;
     }
   }
-
   function drawPagination(totalPages) {
     const container = el("jobPagination");
     if (!container) return;
@@ -932,7 +878,6 @@
     html += `</div>`;
     container.innerHTML = html;
   }
-
   window._goPage = function (page) {
     const totalPages = Math.ceil(_jobsFiltered.length / _jobsPageSize);
     if (page < 1 || page > totalPages) return;
@@ -941,7 +886,6 @@
     const card = el("jobTableCard");
     if (card) card.scrollIntoView({ behavior: "smooth", block: "start" });
   };
-
   function filterJobs(query) {
     const q = query.toLowerCase().trim();
     let base = _jobsAll;
@@ -961,7 +905,6 @@
     _jobsPage = 1;
     drawJobTable();
   }
-
   function sortJobs(col, toggleDir) {
     if (_jobsSortCol === col && toggleDir) {
       _jobsSortDir *= -1;
@@ -981,7 +924,6 @@
       if (th.dataset.col === _jobsSortCol) th.classList.add(_jobsSortDir === 1 ? "asc" : "desc");
     });
   }
-
   function onScanDone(result) {
     _activeScan = false;
     const startBtn = el("btnStartScan");
@@ -989,17 +931,12 @@
     setSpinner(false);
     const titleEl = el("progressTitle");
     if (titleEl) titleEl.textContent = "Scan Complete";
-
     _scanResult = result;
     try { localStorage.setItem(LS_SCAN_KEY, JSON.stringify(result)); } catch (e) {}
-
     applyLiveScan(result);
-
     const resultsCard = el("scanResultsCard");
     if (resultsCard) resultsCard.style.display = "block";
-
     renderKpis(result.kpis, "scanKpiRow");
-
     if (result.skills && result.skills.length) {
       const top = result.skills.slice(0, 15);
       const maxX = Math.max(...top.map((r) => r.frequency || 0));
@@ -1067,14 +1004,11 @@
         bargap: 0.3,
       });
     }
-
     renderScanExtras(result);
     renderJobTable(result.jobs_list || []);
     checkAlertThreshold(result.kpis, result.skills || []);
-
     if (_mySkills.length) analyzeSkillGap(result.skills || _data && _data.skills || []);
   }
-
   function pollScan(scanId) {
     if (_pollTimer) clearInterval(_pollTimer);
     let lastMsg = "";
@@ -1110,7 +1044,6 @@
       }
     }, 1500);
   }
-
   function startScan() {
     const keyword = (el("scanKeyword").value || "").trim();
     const location = (el("scanLocation").value || "Indonesia").trim();
@@ -1155,7 +1088,6 @@
         el("btnStartScan").disabled = false; _activeScan = false; setSpinner(false);
       });
   }
-
   function resetToDefault() {
     _scanResult = null; _scanId = null;
     if (_pollTimer) { clearInterval(_pollTimer); _pollTimer = null; }
@@ -1164,7 +1096,6 @@
     if (el("btnResetScan")) el("btnResetScan").style.display = "none";
     if (_data) renderAllCharts(_data);
   }
-
   function loadSavedScan() {
     try {
       const raw = localStorage.getItem(LS_SCAN_KEY);
@@ -1182,7 +1113,6 @@
       }
     } catch (e) {}
   }
-
   function loadCapabilities() {
     fetch("/api/capabilities")
       .then((r) => r.json())
@@ -1195,7 +1125,6 @@
       })
       .catch(() => {});
   }
-
   function initTypingAnimation() {
     const target = el("typingText");
     if (!target) return;
@@ -1203,7 +1132,6 @@
     let charIdx = 0;
     let isDeleting = false;
     let pauseTimer = null;
-
     function type() {
       const phrase = TYPING_PHRASES[phraseIdx];
       if (!isDeleting) {
@@ -1226,11 +1154,9 @@
       }
       tick();
     }
-
     function tick() { pauseTimer = setTimeout(type, isDeleting ? 30 : 52); }
     tick();
   }
-
   function initParticles() {
     const canvas = el("particleCanvas");
     if (!canvas) return;
@@ -1244,11 +1170,9 @@
       dy: (Math.random() - 0.5) * 0.28,
       o: Math.random() * 0.38 + 0.08,
     }));
-
     function getColor() {
       return document.documentElement.getAttribute("data-theme") === "dark" ? "rgba(6,182,212," : "rgba(10,102,194,";
     }
-
     function draw() {
       ctx.clearRect(0, 0, W, H);
       const col = getColor();
@@ -1277,19 +1201,16 @@
       }
       requestAnimationFrame(draw);
     }
-
     draw();
     window.addEventListener("resize", () => {
       W = canvas.width = window.innerWidth;
       H = canvas.height = window.innerHeight;
     });
   }
-
   let _easterClicks = 0;
   let _easterTimer = null;
   const KONAMI = [38, 38, 40, 40, 37, 39, 37, 39, 66, 65];
   let _konamiIdx = 0;
-
   function triggerEasterEgg() {
     const brand = el("brandIcon");
     if (brand) { brand.classList.remove("easter-active"); brand.offsetHeight; brand.classList.add("easter-active"); setTimeout(() => brand.classList.remove("easter-active"), 800); }
@@ -1299,13 +1220,11 @@
       setTimeout(() => { toast.classList.remove("show"); toast.classList.add("hide"); setTimeout(() => toast.classList.remove("hide"), 400); }, 2800);
     }
   }
-
   function renderScanExtras(result) {
     const remote = result.remote_stats || {};
     const freshness = result.freshness || {};
     const salary = result.salary_by_category || [];
     const salaryStats = result.salary_stats || {};
-
     if (remote.remote !== undefined) {
       const rLabels = ["Remote", "Onsite", "Unknown"];
       const rValues = [remote.remote || 0, remote.onsite || 0, remote.unknown || 0];
@@ -1321,7 +1240,6 @@
         margin: { t: 16, r: 100, b: 16, l: 16 },
       });
     }
-
     if (Object.values(freshness).some((v) => v > 0)) {
       const fColors = [COLORS.red, COLORS.amber, COLORS.green, "#94A3B8", "#CBD5E1"];
       const fLabels = ["Hot (<7d)", "Fresh (7-14d)", "Active (14-30d)", "Aging (>30d)", "Unknown"];
@@ -1341,7 +1259,6 @@
         margin: { t: 16, r: 20, b: 60, l: 50 },
       });
     }
-
     const salaryCard = el("salaryChartCard");
     if (salary.length >= 1 && salaryCard) {
       salaryCard.style.display = "block";
@@ -1370,7 +1287,6 @@
       });
     }
   }
-
   function showNotification(msg, type, duration) {
     const container = el("notifStack");
     if (!container) return;
@@ -1396,7 +1312,6 @@
       if (d) { d.classList.add("notif-exit"); setTimeout(() => d.remove(), 350); }
     }, dur);
   }
-
   function checkAlertThreshold(kpis, skills) {
     const condition = (el("alertCondition") || {}).value || "";
     const rawVal = (el("alertValue") || {}).value || "";
@@ -1417,7 +1332,6 @@
       }
     }
   }
-
   function exportToCSV(data, filename) {
     if (!data || !data.length) { showNotification("Tidak ada data untuk di-export", "warning"); return; }
     const keys = Object.keys(data[0]);
@@ -1433,14 +1347,11 @@
     document.body.removeChild(a); URL.revokeObjectURL(url);
     showNotification(`Exported: ${filename}`, "success", 3500);
   }
-
   function loadMySkills() {
     try { _mySkills = JSON.parse(localStorage.getItem(LS_SKILLS_KEY) || "[]"); } catch (e) { _mySkills = []; }
     renderMySkills();
   }
-
   function saveMySkills() { try { localStorage.setItem(LS_SKILLS_KEY, JSON.stringify(_mySkills)); } catch (e) {} }
-
   function addMySkill(skill) {
     const s = skill.toLowerCase().trim();
     if (!s || _mySkills.includes(s)) return;
@@ -1448,7 +1359,6 @@
     saveMySkills();
     renderMySkills();
   }
-
   function removeMySkill(skill) {
     _mySkills = _mySkills.filter((s) => s !== skill);
     saveMySkills();
@@ -1456,7 +1366,6 @@
     const gapResult = el("gapResult");
     if (gapResult) gapResult.style.display = "none";
   }
-
   function renderMySkills() {
     const container = el("mySkillsChips");
     const countEl = el("skillGapCount");
@@ -1470,9 +1379,7 @@
         <button class="chip-remove" onclick="_removeSkill('${s.replace(/'/g, "\\'")}')">x</button>
       </span>`).join("");
   }
-
   window._removeSkill = function (skill) { removeMySkill(skill); };
-
   function analyzeSkillGap(marketSkills) {
     if (!_mySkills.length || !marketSkills.length) return;
     const gapResult = el("gapResult");
@@ -1531,21 +1438,17 @@
     `;
     showNotification(`Skill Gap Analysis completed. Coverage: ${pct}%`, pct >= 70 ? "success" : pct >= 40 ? "warning" : "danger", 5000);
   }
-
   function initEventListeners() {
     el("themeToggle").addEventListener("click", () => applyTheme(_theme === "light" ? "dark" : "light", true));
     el("sidebarToggle").addEventListener("click", () => el("sidebar").classList.toggle("collapsed"));
     el("brandIcon").addEventListener("click", () => el("sidebar").classList.toggle("collapsed"));
     el("mobileMenuBtn").addEventListener("click", () => el("sidebar").classList.toggle("mobile-open"));
-
     document.querySelectorAll(".nav-item").forEach((item) => {
       item.addEventListener("click", (e) => { e.preventDefault(); navigate(item.dataset.section); });
     });
-
     el("btnStartScan").addEventListener("click", startScan);
     el("btnResetScan").addEventListener("click", resetToDefault);
     el("scanKeyword").addEventListener("keydown", (e) => { if (e.key === "Enter") startScan(); });
-
     const skillSelect = el("skillMethodSelect");
     const kbHint = el("keyBertHint");
     if (skillSelect && kbHint) {
@@ -1553,7 +1456,6 @@
         kbHint.style.display = skillSelect.value === "keybert" ? "flex" : "none";
       });
     }
-
     const jobSearch = el("jobSearch");
     if (jobSearch) {
       let searchTimer = null;
@@ -1562,14 +1464,11 @@
         searchTimer = setTimeout(() => filterJobs(jobSearch.value), 280);
       });
     }
-
     const jobPageSize = el("jobPageSize");
     if (jobPageSize) jobPageSize.addEventListener("change", () => { _jobsPage = 1; drawJobTable(); });
-
     document.querySelectorAll(".th-sortable").forEach((th) => {
       th.addEventListener("click", () => sortJobs(th.dataset.col, true));
     });
-
     const alertToggle = el("alertToggle");
     const alertBody = el("alertBody");
     const alertChevron = alertToggle ? alertToggle.querySelector(".alert-chevron") : null;
@@ -1580,7 +1479,6 @@
         if (alertChevron) alertChevron.classList.toggle("open", !open);
       });
     }
-
     const alertCond = el("alertCondition");
     const alertBadge = el("alertBadge");
     if (alertCond && alertBadge) {
@@ -1590,7 +1488,6 @@
         alertBadge.className = hasAlert ? "alert-badge-on" : "alert-badge-off";
       });
     }
-
     const skillGapToggle = el("skillGapToggle");
     const skillGapBody = el("skillGapBody");
     const gapChevron = el("gapChevron");
@@ -1601,7 +1498,6 @@
         if (gapChevron) gapChevron.classList.toggle("open", !open);
       });
     }
-
     const skillGapInput = el("skillGapInput");
     const btnAddSkill = el("btnAddSkill");
     if (skillGapInput && btnAddSkill) {
@@ -1610,7 +1506,6 @@
       });
       btnAddSkill.addEventListener("click", () => { addMySkill(skillGapInput.value); skillGapInput.value = ""; });
     }
-
     const btnAnalyzeGap = el("btnAnalyzeGap");
     if (btnAnalyzeGap) {
       btnAnalyzeGap.addEventListener("click", () => {
@@ -1618,7 +1513,6 @@
         analyzeSkillGap(marketSkills);
       });
     }
-
     const btnClearSkills = el("btnClearSkills");
     if (btnClearSkills) {
       btnClearSkills.addEventListener("click", () => {
@@ -1626,7 +1520,6 @@
         const gapResult = el("gapResult"); if (gapResult) gapResult.style.display = "none";
       });
     }
-
     const btnExportJobs = el("btnExportJobs");
     if (btnExportJobs) {
       btnExportJobs.addEventListener("click", () => {
@@ -1634,14 +1527,12 @@
         exportToCSV(_jobsFiltered, `jobs_${ts}.csv`);
       });
     }
-
     const btnExportSalary = el("btnExportSalary");
     if (btnExportSalary) {
       btnExportSalary.addEventListener("click", () => {
         if (_salaryData && _salaryData.length) exportToCSV(_salaryData, `salary_by_category.csv`);
       });
     }
-
     document.querySelectorAll(".remote-filter-btn").forEach((btn) => {
       btn.addEventListener("click", () => {
         document.querySelectorAll(".remote-filter-btn").forEach((b) => b.classList.remove("active"));
@@ -1651,7 +1542,6 @@
         filterJobs((el("jobSearch") || {}).value || "");
       });
     });
-
     const brandIcon = el("brandIcon");
     if (brandIcon) {
       brandIcon.addEventListener("click", () => {
@@ -1661,12 +1551,10 @@
         if (_easterClicks >= 5) { _easterClicks = 0; triggerEasterEgg(); }
       });
     }
-
     document.addEventListener("keydown", (e) => {
       if (e.keyCode === KONAMI[_konamiIdx]) { _konamiIdx++; if (_konamiIdx === KONAMI.length) { _konamiIdx = 0; triggerEasterEgg(); } }
       else { _konamiIdx = 0; }
     });
-
     document.addEventListener("click", (e) => {
       if (window.innerWidth <= 900) {
         const sidebar = el("sidebar");
@@ -1674,7 +1562,6 @@
         if (sidebar.classList.contains("mobile-open") && !sidebar.contains(e.target) && e.target !== btn) sidebar.classList.remove("mobile-open");
       }
     });
-
     window.addEventListener("resize", () => {
       const active = document.querySelector(".page-section.active");
       if (active) {
@@ -1684,15 +1571,12 @@
       }
     });
   }
-
   async function init() {
     initTheme();
     initEventListeners();
-    // initParticles();
     initTypingAnimation();
     loadCapabilities();
     loadMySkills();
-
     try {
       const res = await fetch("/api/data");
       if (!res.ok) throw new Error("HTTP " + res.status);
@@ -1709,15 +1593,10 @@
           let waited = 0;
           const t = setInterval(() => { waited += 100; if (window.Plotly || waited > 9000) { clearInterval(t); resolve(); } }, 100);
         });
-        // Force all sections to display: block so Plotly can calculate dimensions correctly
         document.querySelectorAll(".page-section").forEach(s => s.style.display = 'block');
-        
         renderAllCharts(data);
         loadSavedScan();
-        
-        // Remove the inline style, let CSS handle it
         document.querySelectorAll(".page-section").forEach(s => s.style.display = '');
-        
         navigate(localStorage.getItem("kos_active_menu") || "overview");
       }
     } catch (e) {
@@ -1729,7 +1608,6 @@
       }
     }
   }
-
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init);
   else init();
 })();

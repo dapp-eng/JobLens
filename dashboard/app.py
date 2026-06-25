@@ -8,20 +8,15 @@ import warnings
 from datetime import datetime
 from collections import Counter
 from pathlib import Path
-
 import numpy as np
 import pandas as pd
 import os
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
 os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
-
 from flask import Flask, jsonify, request, render_template, send_file
-
 warnings.filterwarnings("ignore")
-
 app = Flask(__name__, static_folder="static", template_folder="templates")
 app.secret_key = os.environ.get("SECRET_KEY", "kos-intel-2024-x9k")
-
 BASE_DIR = Path(__file__).parent
 DATA_DIR = BASE_DIR / "data" / "processed"
 _cache = {}
@@ -29,8 +24,6 @@ _scans = {}
 _keybert_model = None
 _keybert_available = False
 _keybert_init_lock = threading.Lock()
-
-
 def _get_keybert():
     global _keybert_model, _keybert_available
     if _keybert_model is not None:
@@ -47,22 +40,16 @@ def _get_keybert():
         except Exception:
             _keybert_available = False
             return None
-
-
 def extract_skills_keybert(text, top_n=8):
     if not text or len(str(text).strip()) < 10:
         return []
-        
     model = _get_keybert()
     if model is None:
         return []
-        
     try:
         text_str = str(text)
         chunk_size = 1500
-        # Split text into chunks to avoid OOM on long texts
         chunks = [text_str[i:i+chunk_size] for i in range(0, len(text_str), chunk_size)]
-        
         all_keywords = []
         for chunk in chunks:
             if len(chunk.strip()) < 10:
@@ -74,16 +61,11 @@ def extract_skills_keybert(text, top_n=8):
                 top_n=top_n,
             )
             all_keywords.extend([kw[0] for kw in keywords])
-            
-        # Count frequency of extracted keywords across all chunks
-        # and take the most common ones
         kw_counts = Counter(all_keywords)
         return [kw for kw, count in kw_counts.most_common(top_n)]
-        
     except Exception as e:
         print(f"KeyBERT error: {e}")
         return []
-
 def _read_csv(name):
     path = DATA_DIR / name
     if not path.exists():
@@ -92,8 +74,6 @@ def _read_csv(name):
         return pd.read_csv(path)
     except Exception:
         return pd.DataFrame()
-
-
 def _read_json(name):
     path = DATA_DIR / name
     if not path.exists():
@@ -103,8 +83,6 @@ def _read_json(name):
             return json.load(f)
     except Exception:
         return {}
-
-
 def _to_records(df):
     if df is None or df.empty:
         return []
@@ -112,8 +90,6 @@ def _to_records(df):
     for c in df.select_dtypes(include=["float64", "float32"]).columns:
         df[c] = df[c].where(df[c].notna(), None)
     return df.to_dict(orient="records")
-
-
 def _parse_list_col(val):
     if val is None or (isinstance(val, float) and np.isnan(val)):
         return []
@@ -126,8 +102,6 @@ def _parse_list_col(val):
         except Exception:
             return []
     return []
-
-
 def _extract_city(loc_str):
     if not loc_str or (isinstance(loc_str, float) and np.isnan(loc_str)):
         return "Unknown"
@@ -144,8 +118,6 @@ def _extract_city(loc_str):
         return "Remote"
     parts = str(loc_str).split(",")
     return parts[0].strip().title() if parts else str(loc_str).title()
-
-
 def _compute_kpis(meta, df_idn, df_content, df_companies):
     kpis = {}
     if meta:
@@ -155,7 +127,6 @@ def _compute_kpis(meta, df_idn, df_content, df_companies):
         kpis["date_range"] = meta.get("date_range", "N/A")
         kpis["run_timestamp"] = meta.get("run_timestamp", "")
         kpis["total_jobs"] = meta.get("total_indonesia") or meta.get("total_jobs", 0)
-
     if not df_idn.empty:
         kpis["total_jobs"] = kpis.get("total_jobs") or len(df_idn)
         if "company_name" in df_idn.columns:
@@ -169,7 +140,6 @@ def _compute_kpis(meta, df_idn, df_content, df_companies):
             kpis["unique_locations"] = int(df_idn["location"].nunique())
     elif not df_companies.empty:
         kpis.setdefault("unique_companies", len(df_companies))
-
     if not df_content.empty:
         kpis["total_ig_posts"] = len(df_content)
         if "engagement_rate" in df_content.columns:
@@ -180,10 +150,7 @@ def _compute_kpis(meta, df_idn, df_content, df_companies):
             first_valid = df_content["follower_count"].dropna()
             if len(first_valid):
                 kpis["ig_followers"] = int(first_valid.iloc[0])
-
     return kpis
-
-
 def _category_dist(df_idn):
     if df_idn.empty or "job_category" not in df_idn.columns:
         return []
@@ -192,8 +159,6 @@ def _category_dist(df_idn):
     total = counts["count"].sum()
     counts["percentage"] = (counts["count"] / total * 100).round(1)
     return _to_records(counts)
-
-
 def _location_dist(df_idn):
     if df_idn.empty or "location" not in df_idn.columns:
         return []
@@ -204,8 +169,6 @@ def _location_dist(df_idn):
     total = counts["count"].sum()
     counts["percentage"] = (counts["count"] / total * 100).round(1)
     return _to_records(counts)
-
-
 def load_data():
     global _cache
     meta = _read_json("metadata.json")
@@ -222,17 +185,12 @@ def load_data():
     df_hashtag = _read_csv("hashtag_freq.csv")
     df_gap = _read_csv("gap_analysis.csv")
     df_recs = _read_csv("recommendations.csv")
-
     if not df_day.empty:
         cols = df_day.columns.tolist()
         if len(cols) == 2:
             df_day.columns = ["day_of_week", "engagement_rate"]
-
     if not df_content.empty and "hashtags" in df_content.columns:
         df_content["hashtags"] = df_content["hashtags"].apply(_parse_list_col)
-
-
-    # --- Compute Tier 1 Metrics for Overview ---
     salary_stats = {}
     salary_by_cat = []
     if not df_idn.empty:
@@ -261,7 +219,6 @@ def load_data():
                             "count": int(len(cdf)),
                         })
                 salary_by_cat.sort(key=lambda x: x["avg_salary"], reverse=True)
-
     freshness = {"hot": 0, "fresh": 0, "active": 0, "aging": 0, "unknown": 0}
     if not df_idn.empty and "posted_date" in df_idn.columns:
         try:
@@ -276,7 +233,6 @@ def load_data():
             }
         except Exception:
             pass
-
     remote_stats = {"remote": 0, "onsite": 0, "unknown": 0}
     if not df_idn.empty and "is_remote" in df_idn.columns:
         try:
@@ -288,10 +244,7 @@ def load_data():
             }
         except Exception:
             pass
-    # -------------------------------------------
-
     has_data = bool(meta) or not df_idn.empty or not df_skills.empty
-
     _cache = {
         "metadata": meta,
         "kpis": _compute_kpis(meta, df_idn, df_content, df_companies),
@@ -308,7 +261,6 @@ def load_data():
             "monthly_trend": _to_records(df_monthly),
             "hashtags": _to_records(df_hashtag),
         },
-        
         "gap_analysis": _to_records(df_gap),
         "recommendations": _to_records(df_recs),
         "salary_stats": salary_stats,
@@ -329,11 +281,7 @@ def load_data():
         "loaded_at": datetime.now().isoformat(),
     }
     return _cache
-
-
 load_data()
-
-
 SCAN_SKILLS = [
     "sql", "python", "excel", "power bi", "tableau", "looker", "looker studio",
     "machine learning", "deep learning", "tensorflow", "pytorch", "pandas", "numpy",
@@ -346,7 +294,6 @@ SCAN_SKILLS = [
     "flask", "spring", "golang", "statistics", "data engineering", "data science",
     "nlp", "computer vision", "restful api", "microservices", "agile", "scrum",
 ]
-
 SCAN_CATEGORIES = {
     "Data and Technology": ["data", "analyst", "scientist", "analytics", "sql", "python", "machine learning", "ml", "ai", "bi", "business intelligence", "tableau", "power bi", "spark", "hadoop", "etl", "database", "statistic"],
     "Software Engineering": ["software", "developer", "backend", "frontend", "fullstack", "full stack", "mobile", "android", "ios", "flutter", "react", "devops", "cloud", "aws", "gcp", "azure", "programmer", "engineer"],
@@ -358,24 +305,18 @@ SCAN_CATEGORIES = {
     "Operations and Supply Chain": ["operation", "supply chain", "logistics", "warehouse", "procurement", "inventory"],
     "Customer Service": ["customer service", "customer support", "call center", "helpdesk", "technical support"],
 }
-
-
 def _classify_job(title):
     t = str(title).lower()
     for cat, kws in SCAN_CATEGORIES.items():
         if any(kw in t for kw in kws):
             return cat
     return "General Business"
-
-
 def _safe_str(val):
     if val is None:
         return ""
     if isinstance(val, float) and np.isnan(val):
         return ""
     return str(val)
-
-
 def _process_scan_df(df, keyword, location, use_keybert=False):
     if df.empty:
         return {}
@@ -389,16 +330,13 @@ def _process_scan_df(df, keyword, location, use_keybert=False):
             df[col] = ""
     df["description"] = df["description"].fillna("")
     df["job_category"] = df["job_title"].apply(_classify_job)
-
     skill_counter = Counter()
     descriptions = df["description"].tolist()
-
     for desc in descriptions:
         d = str(desc).lower()
         for sk in SCAN_SKILLS:
             if sk in d:
                 skill_counter[sk] += 1
-
     if use_keybert:
         sample_for_keybert = descriptions[:50]
         for desc in sample_for_keybert:
@@ -407,20 +345,16 @@ def _process_scan_df(df, keyword, location, use_keybert=False):
                 sk_clean = str(sk).lower().strip()
                 if sk_clean and len(sk_clean) > 2:
                     skill_counter[sk_clean] += 1
-
     top_skills = [{"skill": s, "frequency": c} for s, c in skill_counter.most_common(20)]
-
     cat_counts = df["job_category"].value_counts().reset_index()
     cat_counts.columns = ["job_category", "count"]
     total = cat_counts["count"].sum()
     cat_counts["percentage"] = (cat_counts["count"] / total * 100).round(1)
-
     companies = []
     if "company_name" in df.columns:
         cc = df["company_name"].value_counts().head(20).reset_index()
         cc.columns = ["company_name", "job_count"]
         companies = cc.to_dict(orient="records")
-
     trend = []
     if "posted_date" in df.columns:
         try:
@@ -430,13 +364,11 @@ def _process_scan_df(df, keyword, location, use_keybert=False):
             trend = t_df.sort_values("year_month").to_dict(orient="records")
         except Exception:
             pass
-
     df["city"] = df["location"].apply(_extract_city)
     lc = df["city"].value_counts().head(10).reset_index()
     lc.columns = ["city", "count"]
     tot_l = lc["count"].sum()
     lc["percentage"] = (lc["count"] / tot_l * 100).round(1)
-
     table_cols = ["job_title", "company_name", "location", "job_category", "posted_date", "job_url", "job_type", "is_remote", "min_amount", "max_amount", "currency"]
     available = [c for c in table_cols if c in df.columns]
     jobs_list = []
@@ -445,7 +377,6 @@ def _process_scan_df(df, keyword, location, use_keybert=False):
         for c in available:
             entry[c] = _safe_str(row[c])
         jobs_list.append(entry)
-
     salary_stats = {}
     salary_by_cat = []
     for sc in ["min_amount", "max_amount"]:
@@ -471,7 +402,6 @@ def _process_scan_df(df, keyword, location, use_keybert=False):
                     "count": int(len(cdf)),
                 })
         salary_by_cat.sort(key=lambda x: x["avg_salary"], reverse=True)
-
     freshness = {"hot": 0, "fresh": 0, "active": 0, "aging": 0, "unknown": 0}
     if "posted_date" in df.columns:
         try:
@@ -486,7 +416,6 @@ def _process_scan_df(df, keyword, location, use_keybert=False):
             }
         except Exception:
             pass
-
     remote_stats = {"remote": 0, "onsite": 0, "unknown": 0}
     if "is_remote" in df.columns:
         try:
@@ -498,11 +427,9 @@ def _process_scan_df(df, keyword, location, use_keybert=False):
             }
         except Exception:
             pass
-
     df_gap = _read_csv("gap_analysis.csv")
     recs = []
     gap_records = []
-    
     if not df_gap.empty:
         THEME_KEYWORDS = {
             "Skill Teknis & Tools": ["excel", "sql", "data analysis", "python", "tableau", "power bi", "machine learning", "javascript", "react", "java", "data", "analyst", "developer", "engineer"],
@@ -516,30 +443,24 @@ def _process_scan_df(df, keyword, location, use_keybert=False):
             "Industry Knowledge": ["business process", "business acumen", "industry trend", "market research", "competitor", "market"],
             "Personal Branding & LinkedIn": ["linkedin", "visibility", "profile", "branding", "social media", "brand", "network"]
         }
-        
         theme_freqs = {}
         total_jobs_for_freq = max(len(df), 1)
         for theme, kws in THEME_KEYWORDS.items():
             freq = sum(skill_counter.get(kw, 0) for kw in kws)
             theme_freqs[theme] = min(freq / total_jobs_for_freq, 1.0)
-
         for i, row in df_gap.iterrows():
             theme = row["content_topic"]
             market_freq = theme_freqs.get(theme, 0.0)
             cov_rate = row.get("coverage_rate", 0.0)
-            
             gap_score = market_freq * (1.0 - min(cov_rate * 3.0, 1.0))
             df_gap.at[i, "market_frequency"] = round(market_freq, 3)
             df_gap.at[i, "gap_score"] = round(gap_score, 3)
             df_gap.at[i, "opportunity_score"] = round(gap_score * 100.0, 2)
-            
             top_kws = sorted([kw for kw in THEME_KEYWORDS.get(theme, []) if skill_counter.get(kw, 0) > 0], key=lambda x: skill_counter[x], reverse=True)[:3]
             if top_kws:
                 df_gap.at[i, "top_keywords_in_jobs"] = str(top_kws)
-                
         df_gap = df_gap.sort_values("opportunity_score", ascending=False).reset_index(drop=True)
         gap_records = df_gap.to_dict(orient="records")
-        
         for i, row in df_gap.head(5).iterrows():
             theme = row["content_topic"]
             opp = row["opportunity_score"]
@@ -556,7 +477,6 @@ def _process_scan_df(df, keyword, location, use_keybert=False):
                 "recommended_frequency": "3x per week" if opp > 50 else "2x per week",
                 "reasoning": f"Dari {len(df)} job scan terbaru, relevansi topik ini menjadi {round(row['market_frequency']*100, 1)}%. Performa ER historis akun adalah {row['avg_engagement_rate']}%."
             })
-
     return {
         "kpis": {
             "total_jobs": len(df),
@@ -584,8 +504,6 @@ def _process_scan_df(df, keyword, location, use_keybert=False):
         "gap_analysis": gap_records,
         "recommendations": recs,
     }
-
-
 def _run_scan(scan_id, keyword, location, limit, use_keybert=False):
     reg = _scans[scan_id]
     try:
@@ -595,11 +513,9 @@ def _run_scan(scan_id, keyword, location, limit, use_keybert=False):
         except ImportError:
             reg.update({"status": "error", "error": "python-jobspy not installed on this server."})
             return
-
         skill_note = " + KeyBERT AI" if use_keybert else ""
         reg.update({"progress": 15, "message": f'Connecting to LinkedIn - searching "{keyword}" in {location}...'})
         time.sleep(0.5)
-
         reg.update({"progress": 25, "message": "Fetching job listings (this may take 1-3 minutes)..."})
         jobs_df = scrape_jobs(
             site_name=["linkedin"],
@@ -609,17 +525,13 @@ def _run_scan(scan_id, keyword, location, limit, use_keybert=False):
             hours_old=8760,
             linkedin_fetch_description=True,
         )
-
         reg.update({"progress": 70, "message": f"Found {len(jobs_df)} jobs. Deduplicating..."})
         jobs_df = jobs_df.drop_duplicates(subset=["description"]).copy() if not jobs_df.empty else jobs_df
-
         skill_msg = f"Extracting skills{skill_note} and categorizing..."
         reg.update({"progress": 80, "message": skill_msg})
         result = _process_scan_df(jobs_df, keyword, location, use_keybert=use_keybert)
-
         reg.update({"progress": 95, "message": "Finalizing analysis..."})
         time.sleep(0.3)
-
         reg.update({
             "progress": 100,
             "status": "done",
@@ -628,37 +540,25 @@ def _run_scan(scan_id, keyword, location, limit, use_keybert=False):
         })
     except Exception as exc:
         reg.update({"status": "error", "error": str(exc), "message": f"Scan failed: {exc}"})
-
-
 @app.route("/")
 def index():
     return render_template("index.html")
-
-
 @app.route("/api/data")
 def api_data():
     return jsonify(_cache)
-
-
 @app.route("/api/reload")
 def api_reload():
     load_data()
     return jsonify({"status": "ok", "loaded_at": _cache.get("loaded_at")})
-
-
 @app.route("/api/wordcloud")
 def api_wordcloud():
     path = DATA_DIR / "wordcloud_skills.png"
     if path.exists():
         return send_file(str(path), mimetype="image/png")
     return "", 404
-
-
 @app.route("/api/wordcloud/data")
 def api_wordcloud_data():
     return jsonify(_cache.get("skills", []))
-
-
 @app.route("/api/capabilities")
 def api_capabilities():
     try:
@@ -669,8 +569,6 @@ def api_capabilities():
         "keybert": _keybert_available,
         "skill_method": "KeyBERT + Keyword-based (hybrid)" if _keybert_available else "Keyword-based (built-in)",
     })
-
-
 @app.route("/api/scan/start", methods=["POST"])
 def scan_start():
     body = request.get_json() or {}
@@ -692,8 +590,6 @@ def scan_start():
     t = threading.Thread(target=_run_scan, args=(sid, keyword, location, limit, use_keybert), daemon=True)
     t.start()
     return jsonify({"scan_id": sid})
-
-
 @app.route("/api/scan/status/<sid>")
 def scan_status(sid):
     if sid not in _scans:
@@ -710,18 +606,12 @@ def scan_status(sid):
     elif job["status"] == "error":
         out["error"] = job.get("error")
     return jsonify(out)
-
-
 @app.errorhandler(404)
 def not_found(e):
     return render_template("error.html", code=404, msg="Page not found."), 404
-
-
 @app.errorhandler(500)
 def server_error(e):
     return render_template("error.html", code=500, msg="Internal server error."), 500
-
-
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port, debug=False)
