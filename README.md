@@ -8,7 +8,7 @@ pinned: false
 ---
 
 # JobLens
-**Live Dashboard:** [https://YOUR-APP-NAME.onrender.com](https://YOUR-APP-NAME.onrender.com)
+**Live Dashboard:** [https://dapp-eng-joblens-dashboard.hf.space](https://dapp-eng-joblens-dashboard.hf.space)
 
 JobLens is an interactive dashboard and data pipeline built for analyzing job market trends, specifically targeting tech and data roles in Indonesia. It collects, cleans, and visualizes job posting data to uncover insights such as top skills, hiring companies, work modes (remote/onsite), and average salaries.
 
