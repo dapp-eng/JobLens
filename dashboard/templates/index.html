@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>KarirOScope</title>
+<meta name="description" content="KarirOScope - Job market intelligence and Instagram analytics dashboard for career insights in Indonesia."/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="/static/css/style.css?v=12"/>
+<script src="https://cdn.plot.ly/plotly-2.35.2.min.js" defer></script>
+</head>
+<body>
+
+<canvas id="particleCanvas" class="particle-canvas"></canvas>
+
+<div class="notif-stack" id="notifStack"></div>
+
+<div class="app-shell">
+
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div class="brand">
+        <div class="brand-icon" id="brandIcon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <rect x="2" y="3" width="7" height="7" rx="1.5"/><rect x="15" y="3" width="7" height="7" rx="1.5"/>
+            <rect x="2" y="14" width="7" height="7" rx="1.5"/><rect x="15" y="14" width="7" height="7" rx="1.5"/>
+          </svg>
+        </div>
+        <span class="brand-name">KarirOScope</span>
+      </div>
+      <button class="sidebar-toggle" id="sidebarToggle" title="Collapse sidebar">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M15 18l-6-6 6-6"/>
+        </svg>
+      </button>
+    </div>
+
+    <nav class="sidebar-nav">
+      <div class="nav-group-label">Dashboard</div>
+      <a class="nav-item active" data-section="overview" href="#overview">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+        <span class="nav-label">Overview</span>
+      </a>
+      <a class="nav-item" data-section="skills" href="#skills">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>
+        <span class="nav-label">Skills Analysis</span>
+      </a>
+      <a class="nav-item" data-section="companies" href="#companies">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21h18M9 8h1m-1 4h1m-1 4h1M14 8h1m-1 4h1m-1 4h1M5 21V5a2 2 0 012-2h10a2 2 0 012 2v16"/></svg>
+        <span class="nav-label">Top Companies</span>
+      </a>
+      <div class="nav-section-divider"></div>
+      <div class="nav-group-label">Analytics</div>
+      <a class="nav-item" data-section="instagram" href="#instagram">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg>
+        <span class="nav-label">Instagram Insights</span>
+      </a>
+      <a class="nav-item" data-section="gap" href="#gap">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        <span class="nav-label">Gap Analysis</span>
+      </a>
+      <a class="nav-item" data-section="recommendations" href="#recommendations">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+        <span class="nav-label">Recommendations</span>
+      </a>
+      <div class="nav-section-divider"></div>
+      <div class="nav-group-label">Tools</div>
+      <a class="nav-item" data-section="scanner" href="#scanner">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <span class="nav-label">Live Scanner</span>
+        <span class="nav-badge" id="navBadgeLive">Live</span>
+      </a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="sidebar-meta" id="sidebarMeta">
+        <div class="meta-card">
+          <div class="meta-title">Dataset Info</div>
+          <div class="meta-row"><span>Query</span><span id="meta-query" class="meta-val">-</span></div>
+          <div class="meta-row"><span>Location</span><span id="meta-location" class="meta-val">-</span></div>
+          <div class="meta-row"><span>Date Range</span><span id="meta-range" class="meta-val">-</span></div>
+          <div class="meta-row"><span>Last Run</span><span id="meta-ts" class="meta-val">-</span></div>
+        </div>
+        <div class="meta-card">
+          <div class="meta-title">Quick Stats</div>
+          <div class="meta-row"><span>Total Jobs</span><strong id="meta-jobs" class="meta-num">-</strong></div>
+          <div class="meta-row"><span>Companies</span><strong id="meta-companies" class="meta-num">-</strong></div>
+          <div class="meta-row"><span>IG Posts</span><strong id="meta-ig" class="meta-num">-</strong></div>
+          <div class="meta-row"><span>Avg ER</span><strong id="meta-er" class="meta-num">-</strong></div>
+        </div>
+        <div class="data-status-row" id="dataStatusRow"></div>
+      </div>
+    </div>
+    <div class="sidebar-copyright">D.A.P. - KarirOScope</div>
+  </aside>
+
+  <div class="content-area">
+    <header class="topbar" id="topbar">
+      <button class="topbar-menu" id="mobileMenuBtn">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      </button>
+      <div class="topbar-title">
+        <span id="topbarSectionLabel">Overview</span>
+        <span class="topbar-scan-badge" id="topbarScanBadge" style="display:none">Live Scan Active</span>
+      </div>
+      <div class="topbar-actions">
+        <button class="btn-reset-scan" id="btnResetScan" style="display:none" title="Reset to notebook data">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 12a9 9 0 109-9 9.75 9.75 0 00-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+          Reset Data
+        </button>
+        <button class="theme-toggle" id="themeToggle" title="Toggle theme">
+          <svg class="icon-sun" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+          <svg class="icon-moon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
+        </button>
+      </div>
+    </header>
+
+    <main class="main-scroll" id="mainScroll">
+
+      <div id="no-data-banner" class="no-data-banner" style="display:none">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        <div>
+          <strong>No processed data found.</strong>
+          Run the notebook first to generate output files in <code>data/processed/</code>, then reload.
+        </div>
+      </div>
+
+      <section class="page-section" id="section-overview">
+        <div class="section-banner" id="overviewBanner">
+          <div class="banner-left">
+            <div class="banner-tag" id="bannerTag">Notebook Dataset</div>
+            <h2 class="banner-title" id="bannerTitle">KarirOScope</h2>
+            <p class="banner-sub" id="bannerSub">
+              <span id="typingText"></span><span class="typing-cursor">|</span>
+            </p>
+          </div>
+          <div class="banner-visual" id="bannerVisual">
+            <svg class="visual-rings" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+              <circle class="ring r1" cx="60" cy="60" r="50" fill="none" stroke-width="1.5"/>
+              <circle class="ring r2" cx="60" cy="60" r="38" fill="none" stroke-width="2"/>
+              <circle class="ring r3" cx="60" cy="60" r="26" fill="none" stroke-width="2.5"/>
+              <circle class="ring-core" cx="60" cy="60" r="10" fill="none" stroke-width="3"/>
+              <circle class="dot d1" cx="60" cy="10" r="4"/>
+              <circle class="dot d2" cx="110" cy="60" r="3.5"/>
+              <circle class="dot d3" cx="60" cy="110" r="3"/>
+              <circle class="dot d4" cx="10" cy="60" r="3"/>
+              <circle class="dot d5" cx="99.6" cy="26.3" r="2.5"/>
+              <circle class="dot d6" cx="99.6" cy="93.7" r="2.5"/>
+              <line class="axis-line" x1="60" y1="4" x2="60" y2="116"/>
+              <line class="axis-line" x1="4" y1="60" x2="116" y2="60"/>
+            </svg>
+          </div>
+          <div class="banner-stats" id="bannerStats"></div>
+        </div>
+        <div class="kpi-row" id="kpiRow"></div>
+        <div class="charts-grid-2" style="margin-top:24px">
+          <div class="chart-card">
+            <div class="chart-title">Job Posting Volume Trend</div>
+            <div id="chart-trend" class="chart-area chart-area-md"></div>
+          </div>
+          <div class="chart-card">
+            <div class="chart-title">Job Category Distribution</div>
+            <div id="chart-categories" class="chart-area chart-area-md"></div>
+          </div>
+          <div class="chart-card">
+            <div class="chart-title">Monthly Posting Volume</div>
+            <div id="chart-trends-line" class="chart-area chart-area-md"></div>
+          </div>
+          <div class="chart-card">
+            <div class="chart-title">Top Cities by Job Count</div>
+            <div id="chart-locations" class="chart-area chart-area-md"></div>
+          </div>
+        </div>
+      
+        <div class="charts-grid-2" style="margin-top:18px">
+          <div class="chart-card">
+            <div class="chart-title">Work Mode Distribution</div>
+            <div id="chart-overview-remote" class="chart-area chart-area-md"></div>
+          </div>
+          <div class="chart-card">
+            <div class="chart-title">Job Freshness
+              <span class="freshness-legend">
+                <span class="fl hot">Hot &lt;7d</span>
+                <span class="fl fresh">Fresh &lt;14d</span>
+                <span class="fl active">Active &lt;30d</span>
+                <span class="fl aging">Aging</span>
+              </span>
+            </div>
+            <div id="chart-overview-freshness" class="chart-area chart-area-md"></div>
+          </div>
+        </div>
+        <div class="chart-card salary-chart-card" id="overviewSalaryCard" style="display:none;margin-top:18px">
+          <div class="chart-title-row">
+            <span class="chart-title">Average Salary by Category</span>
+            <span class="salary-meta" id="overviewSalaryMeta"></span>
+          </div>
+          <div id="chart-overview-salary" class="chart-area chart-area-sm"></div>
+        </div>
+
+      </section>
+
+      <section class="page-section" id="section-skills">
+        <div class="section-header"><h2>Skills Analysis</h2><p>Most in-demand technical and professional skills extracted from job descriptions.</p></div>
+        <div class="chart-card" style="margin-top:20px">
+          <div class="chart-title">Top 20 In-Demand Skills</div>
+          <div id="chart-skills-bar" class="chart-area chart-area-lg"></div>
+        </div>
+        <div class="chart-card" style="margin-top:20px">
+          <div class="chart-title">Top Skills by Job Category</div>
+          <div id="chart-cat-skills" class="chart-area chart-area-lg"></div>
+        </div>
+        <div class="chart-card" id="wordcloudCard" style="margin-top:20px">
+          <div class="chart-title">Skills Word Cloud</div>
+          <div id="chart-wordcloud" class="chart-area chart-area-lg"></div>
+        </div>
+      </section>
+
+      <section class="page-section" id="section-companies">
+        <div class="section-header"><h2>Top Companies</h2><p>Companies with the most active LinkedIn job postings in the dataset.</p></div>
+        <div class="chart-card" style="margin-top:20px">
+          <div class="chart-title">Top 20 Hiring Companies</div>
+          <div id="chart-companies" class="chart-area chart-area-xl"></div>
+        </div>
+      </section>
+
+      <section class="page-section" id="section-instagram">
+        <div class="section-header">
+          <h2>Instagram Analytics <span class="section-badge" id="igUsernameBadge">@belajarlinkedin</span></h2>
+          <p>Content performance insights for the Instagram account.</p>
+        </div>
+        <div id="instagram-no-data" class="inline-warning" style="display:none">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          Instagram data not found. Run the notebook with a valid Apify token to generate <code>content_performance.csv</code>.
+        </div>
+        <div id="instagram-content" class="instagram-content-wrap">
+          <div class="kpi-row kpi-row--sm" id="igKpiRow"></div>
+          <div class="charts-grid-2" style="margin-top:16px">
+            <div class="chart-card"><div class="chart-title">Avg Engagement Rate by Content Type</div><div id="chart-ig-type" class="chart-area chart-area-md"></div></div>
+            <div class="chart-card"><div class="chart-title">Topic Performance Ranking</div><div id="chart-ig-topic" class="chart-area chart-area-md"></div></div>
+            <div class="chart-card"><div class="chart-title">Best Day to Post</div><div id="chart-ig-day" class="chart-area chart-area-md"></div></div>
+            <div class="chart-card"><div class="chart-title">Monthly Engagement Rate Trend</div><div id="chart-ig-monthly" class="chart-area chart-area-md"></div></div>
+          </div>
+          <div class="chart-card" style="margin-top:16px">
+            <div class="chart-title">Top 20 Hashtags Used</div>
+            <div id="chart-ig-hashtags" class="chart-area chart-area-sm"></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="page-section" id="section-gap">
+        <div class="section-header"><h2>Content Gap Analysis</h2><p>Market demand vs Instagram content coverage - identifies underserved topics.</p></div>
+        <div id="gap-no-data" class="inline-warning" style="display:none">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          Gap analysis data not found. Run the full notebook pipeline to generate <code>gap_analysis.csv</code>.
+        </div>
+        <div id="gap-content" style="margin-top:20px">
+          <div class="chart-card" style="margin-bottom:20px">
+            <div class="chart-title">Market Demand vs Content Coverage</div>
+            <div id="chart-gap-scatter" class="chart-area chart-area-lg"></div>
+          </div>
+          <div class="chart-card">
+            <div class="chart-title">Content Opportunity Score</div>
+            <div id="chart-gap-bar" class="chart-area chart-area-lg"></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="page-section" id="section-recommendations">
+        <div class="section-header"><h2>Content Recommendations</h2><p>Data-driven content strategy prioritized by opportunity score.</p></div>
+        <div id="recs-no-data" class="inline-warning" style="display:none">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          Recommendations data not found. Run the full notebook pipeline to generate <code>recommendations.csv</code>.
+        </div>
+        <div id="recs-cards" class="recs-grid" style="margin-top:20px"></div>
+      </section>
+
+      <section class="page-section" id="section-scanner">
+        <div class="section-header"><h2>Live LinkedIn Scanner</h2><p>Scrape real-time job postings from LinkedIn. Results temporarily override the dashboard.</p></div>
+        <div class="scanner-layout">
+
+          <div class="scanner-form-card">
+            <div class="form-grid">
+              <div class="form-group">
+                <label class="form-label">Job Keyword</label>
+                <input class="form-input" id="scanKeyword" type="text" placeholder="e.g. data analyst, software engineer"/>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Location</label>
+                <input class="form-input" id="scanLocation" type="text" placeholder="e.g. Jakarta, Indonesia" value="Indonesia"/>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Result Limit</label>
+                <div class="select-wrap">
+                  <svg class="select-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 13V6a2 2 0 00-2-2H5a2 2 0 00-2 2v14l4-4h12a2 2 0 002-2z"/></svg>
+                  <select class="form-input" id="scanLimit">
+                    <option value="20">20 jobs (fastest, test)</option>
+                    <option value="50">50 jobs (fast)</option>
+                    <option value="100" selected>100 jobs (recommended)</option>
+                    <option value="200">200 jobs (moderate)</option>
+                    <option value="300">300 jobs (slow)</option>
+                    <option value="500">500 jobs (very slow)</option>
+                  </select>
+                  <svg class="select-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Skill Extraction Method</label>
+                <div class="select-wrap">
+                  <svg class="select-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 3H5a2 2 0 00-2 2v4m6-6h10a2 2 0 012 2v4M9 3v18m0 0h10a2 2 0 002-2V9M9 21H5a2 2 0 01-2-2V9m0 0h18"/></svg>
+                  <select class="form-input" id="skillMethodSelect">
+                    <option value="keyword">Keyword-based (built-in, fast)</option>
+                    <option value="keybert">KeyBERT - AI powered (needs install)</option>
+                  </select>
+                  <svg class="select-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
+                </div>
+                <div class="form-hint" id="keyBertHint" style="display:none">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                  <span>KeyBERT loads a large AI model and adds 3-7 minutes of processing. Requires <code>keybert</code> and <code>sentence-transformers</code> to be installed.</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="alert-config" style="margin-top: 18px;">
+              <div style="padding: 12px 14px 6px; font-size: 13px; font-weight: 700; color: var(--text);">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: -2px; margin-right: 4px;"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0"/></svg>
+                Alert Threshold
+              </div>
+              <div class="alert-config-body" id="alertBody" style="display:block; border-top: none;">
+                <div class="alert-row">
+                  <div class="select-wrap" style="flex:1">
+                    <svg class="select-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                    <select class="form-input" id="alertCondition">
+                      <option value="">Tidak ada alert</option>
+                      <option value="gt">Alert jika total jobs lebih dari</option>
+                      <option value="lt">Alert jika total jobs kurang dari</option>
+                    </select>
+                    <svg class="select-chevron" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
+                  </div>
+                  <input class="form-input alert-val-input" id="alertValue" type="number" placeholder="masukkan angka batas alert"/>
+                </div>
+              </div>
+            </div>
+
+            <div class="scanner-actions">
+              <button class="btn-primary" id="btnStartScan">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+                Start Live Scan
+              </button>
+              <p class="scan-note">LinkedIn scraping: 1-3 minutes. KeyBERT: adds 3-7 minutes.</p>
+            </div>
+          </div>
+
+          <div class="skill-gap-card" id="skillGapCard">
+            <div class="skill-gap-toggle" id="skillGapToggle">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+              <span>My Skill Profile + Gap Analyzer</span>
+              <span class="skill-gap-count" id="skillGapCount">0 skills added</span>
+              <svg class="gap-chevron" id="gapChevron" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
+            </div>
+            <div class="skill-gap-body" id="skillGapBody" style="display:none">
+              <p class="gap-desc">Add your current skills. The dashboard will show you what skills you are missing based on job market data.</p>
+              <div class="gap-input-row">
+                <input class="form-input" id="skillGapInput" placeholder="Type your skill, press Enter or click Add..."/>
+                <button class="btn-add-skill" id="btnAddSkill">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                  Add
+                </button>
+              </div>
+              <div class="my-skills-chips" id="mySkillsChips"></div>
+              <div class="gap-actions" id="gapActions" style="display:none">
+                <button class="btn-analyze" id="btnAnalyzeGap">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+                  Analyze Gap
+                </button>
+                <button class="btn-clear-skills" id="btnClearSkills">Clear All</button>
+              </div>
+              <div class="gap-result" id="gapResult" style="display:none"></div>
+            </div>
+          </div>
+
+          <div class="scan-progress-card" id="scanProgressCard" style="display:none">
+            <div class="progress-header">
+              <div class="progress-title-row">
+                <div class="scan-spinner-inline" id="scanSpinnerInline" style="display:none">
+                  <div class="spinner-ring"></div>
+                </div>
+                <span class="progress-title" id="progressTitle">Scanning...</span>
+              </div>
+              <span class="progress-pct" id="progressPct">0%</span>
+            </div>
+            <div class="progress-track">
+              <div class="progress-fill" id="progressFill" style="width:0%"></div>
+            </div>
+            <div class="progress-message" id="progressMessage">Initializing...</div>
+            <div class="scan-log" id="scanLog"></div>
+            <div class="scan-error-box" id="scanErrorBox" style="display:none"></div>
+          </div>
+
+          <div class="scan-results-card" id="scanResultsCard" style="display:none">
+            <div class="scan-results-header">
+              <div class="scan-results-title">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+                Scan Complete
+              </div>
+              <span class="scan-result-note">Dashboard updated with live data. Use Reset Data to restore notebook data.</span>
+            </div>
+            <div class="kpi-row" id="scanKpiRow"></div>
+            <div class="job-table-card" id="jobTableCard" style="display:none;margin-top:20px">
+              <div class="job-table-header">
+                <div class="job-table-title">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+                  Job Listings
+                  <span class="job-count-badge" id="jobCountBadge"></span>
+                </div>
+                <div class="job-table-controls">
+                  <div class="job-search-wrap">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+                    <input type="text" class="job-search-input" id="jobSearch" placeholder="Search job title, company, category..."/>
+                  </div>
+                  <div class="remote-filter-wrap">
+                    <button class="remote-filter-btn active" data-filter="all" id="rfAll">All</button>
+                    <button class="remote-filter-btn" data-filter="remote" id="rfRemote">Remote</button>
+                    <button class="remote-filter-btn" data-filter="onsite" id="rfOnsite">Onsite</button>
+                  </div>
+                  <select class="job-page-size" id="jobPageSize">
+                    <option value="10">10 / page</option>
+                    <option value="25" selected>25 / page</option>
+                    <option value="50">50 / page</option>
+                  </select>
+                  <button class="btn-export-sm" id="btnExportJobs" title="Export job listings ke CSV">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                    Export CSV
+                  </button>
+                </div>
+              </div>
+              <div class="job-table-wrap">
+                <table class="job-table" id="jobTable">
+                  <thead>
+                    <tr>
+                      <th class="th-no">#</th>
+                      <th class="th-sortable" data-col="job_title">Job Title <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M7 15l5 5 5-5M7 9l5-5 5 5"/></svg></th>
+                      <th class="th-sortable" data-col="company_name">Company <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M7 15l5 5 5-5M7 9l5-5 5 5"/></svg></th>
+                      <th class="th-sortable" data-col="location">Location <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M7 15l5 5 5-5M7 9l5-5 5 5"/></svg></th>
+                      <th class="th-sortable" data-col="job_category">Category <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M7 15l5 5 5-5M7 9l5-5 5 5"/></svg></th>
+                      <th class="th-sortable" data-col="posted_date">Posted <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M7 15l5 5 5-5M7 9l5-5 5 5"/></svg></th>
+                      <th>Link</th>
+                    </tr>
+                  </thead>
+                  <tbody id="jobTableBody"></tbody>
+                </table>
+              </div>
+              <div class="job-pagination" id="jobPagination"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <div class="mobile-copyright">D.A.P. - KarirOScope</div>
+
+    </main>
+  </div>
+</div>
+
+<script>
+  (function() {
+    var activeMenu = localStorage.getItem("kos_active_menu") || "overview";
+    var sec = document.getElementById("section-" + activeMenu);
+    if (sec) sec.classList.add("active");
+    var nav = document.querySelector('.nav-item[data-section="' + activeMenu + '"]');
+    if (nav) nav.classList.add("active");
+  })();
+</script>
+
+<div class="easter-egg-toast" id="easterEggToast">
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+  Achievement Unlocked - Intelligence Master
+</div>
+
+    <script src="{{ url_for('static', filename='js/app.js') }}?v=14"></script>
+</body>
+</html>

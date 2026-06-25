@@ -1,0 +1,43 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Environment
+.env
+.env.*
+venv/
+.venv/
+env/
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb_checkpoints
+
+# Data - raw/sensitive
+data/raw/
+dashboard/data/raw/
+
+# IDE / OS
+.vscode/settings.json
+.idea/
+.DS_Store
+Thumbs.db
+
+# Render / Cloud
+.config
+
+# Streamlit (legacy)
+.streamlit/secrets.toml
+
+# Config
+.config
+
+# Ignored Binary Files
+*.zip
+*.png

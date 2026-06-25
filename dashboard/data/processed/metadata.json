@@ -1,0 +1,27 @@
+{
+  "job_query": "Data",
+  "location_query": "Indonesia",
+  "ig_username": "belajarlinkedin",
+  "total_jobs": 127,
+  "total_indonesia": 126,
+  "total_ig_posts": 33,
+  "date_range": "Oct 2025 - Jun 2026",
+  "run_timestamp": "2026-06-24 22:30:01",
+  "figures_saved": [
+    "skill_bar",
+    "category_skills",
+    "companies",
+    "engagement_type",
+    "likes_comments",
+    "post_type_volume",
+    "topic_perf",
+    "day_pattern",
+    "monthly_trend",
+    "hashtag",
+    "gap_scatter",
+    "opportunity",
+    "market_vs_coverage",
+    "trend",
+    "box_engagement"
+  ]
+}
