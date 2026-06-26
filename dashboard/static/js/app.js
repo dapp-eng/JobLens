@@ -2340,7 +2340,7 @@
         if (
           sidebar.classList.contains('mobile-open') &&
           !sidebar.contains(e.target) &&
-          e.target !== btn
+          !btn.contains(e.target)
         )
           sidebar.classList.remove('mobile-open');
       }
