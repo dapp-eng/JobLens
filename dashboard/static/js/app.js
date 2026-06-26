@@ -2184,9 +2184,13 @@
     el('themeToggle').addEventListener('click', () =>
       applyTheme(_theme === 'light' ? 'dark' : 'light', true),
     );
-    el('sidebarToggle').addEventListener('click', () =>
-      el('sidebar').classList.toggle('collapsed'),
-    );
+    el('sidebarToggle').addEventListener('click', () => {
+      if (window.innerWidth <= 900) {
+        el('sidebar').classList.remove('mobile-open');
+      } else {
+        el('sidebar').classList.toggle('collapsed');
+      }
+    });
     el('brandIcon').addEventListener('click', () => {
       el('sidebar').classList.toggle('collapsed');
       _easterClicks++;
